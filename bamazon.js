@@ -51,16 +51,40 @@ function getProducts(){
     ], (err, res) => {
         if(err) console.log(err);
             res.forEach(element => {
-                console.log(`id: ${element.item_id} | name : ${element.product_name} | price : $${element.price}`)
+                console.log(`id: ${element.item_id} | name : ${element.product_name} | price : $${element.price}`);
+                productIds.push(element.item_id);
             });
             showPurchaseMenu();
     });
 
 }
 
-function purchaseItem(){
-    
+function purchaseProduct(item, amount){
+    conn.query(`UPDATE products SET stock_quantity = (stock_quantity - ?) WHERE item_id = ?`),[
+        amount, item
+    ],(err, res) => {
+        if(err) console.log(err);
+        console.log(res);
+    }
 
+}
+
+function promptPurchaseItem(){
+    inquirer.prompt([{
+        type : 'list',
+        message : 'Which item do you want to buy?',
+        choices : productIds,
+        name : 'item'
+    }]).then((res) => {
+        var item = res.item;
+        inquirer.prompt([{
+            message : 'How many do you want to buy?',
+            type : 'number',
+            name : 'amount'
+        }]).then((res) =>{
+            purchaseProduct(item, res.amount);
+        });
+    });
 }
 
 function showPurchaseMenu(){
@@ -71,7 +95,7 @@ function showPurchaseMenu(){
         message: 'Do you know the ID of the item you want to buy?'
     }]).then((response) => {
         if(response.confirmation === 'Yes'){
-            purchaseItem();
+            promptPurchaseItem();
         }else{
             getProducts();
         }
