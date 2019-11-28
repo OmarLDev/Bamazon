@@ -9,6 +9,8 @@ var conn = mySQL.createConnection({
     database: "BAMAZON" 
 });
 
+var productIds = [];
+
 function createConnection(){
     conn.connect((err) => {
         if(err) console.log(err);
@@ -38,19 +40,64 @@ function getUserRole(username, password){
             }
         }else{
             console.log('Sorry, user not found');
-            process.exit();
-            closeConnection();
+            quit();
         }
     });
 }
 
 function getProducts(){
+    conn.query(`SELECT * FROM products `,[
+
+    ], (err, res) => {
+        if(err) console.log(err);
+            res.forEach(element => {
+                console.log(`id: ${element.item_id} | name : ${element.product_name} | price : $${element.price}`)
+            });
+            showPurchaseMenu();
+    });
 
 }
 
-function showCustomerMenu(){
-    // inquirer.prompt()
+function purchaseItem(){
+    
 
+}
+
+function showPurchaseMenu(){
+    inquirer.prompt([{
+        type: 'list',
+        name: 'confirmation',
+        choices: ['Yes','No'],
+        message: 'Do you know the ID of the item you want to buy?'
+    }]).then((response) => {
+        if(response.confirmation === 'Yes'){
+            purchaseItem();
+        }else{
+            getProducts();
+        }
+    });
+}
+
+function showCustomerMenu(){
+    inquirer.prompt([{
+        type : 'list',
+        message : 'Please select what you want to do',
+        name : 'selection',
+        choices : ['Show items','Purchase', 'Exit']
+    }]).then((response) => {
+        switch(response.selection){
+            case 'Show items':
+                getProducts();
+                break;
+            case 'Purchase':
+                showPurchaseMenu();
+                break;
+            case 'Exit':
+                console.log('Thanks for visiting Bamazon. Good bye!');
+                quit();
+                break;
+        }
+    });
 }
 
 function quit(){
