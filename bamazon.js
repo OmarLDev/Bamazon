@@ -60,13 +60,38 @@ function getProducts(){
 }
 
 function purchaseProduct(item, amount){
-    conn.query(`UPDATE products SET stock_quantity = (stock_quantity - ?) WHERE item_id = ?`),[
-        amount, item
+    conn.query(`SELECT stock_quantity FROM products WHERE item_id = ${item}`,[
+
     ],(err, res) => {
         if(err) console.log(err);
-        console.log(res);
-    }
-
+        if(res[0].stock_quantity > 0){
+            conn.query(`UPDATE products SET ? WHERE ?`,[{
+                stock_quantity : res[0].stock_quantity - amount
+            },{
+                item_id : item
+            }],(err, res) => {
+                if(err) console.log(err);
+                console.log(`Thanks for your purchase!`);
+                inquirer.prompt([{
+                    type: 'list',
+                    message: 'Do you want to make another purchase?',
+                    choices : ['Yes', 'No'],
+                    name : 'buyMore'
+                }]).then((response) => {
+                    switch(response.buyMore){
+                        case 'Yes':
+                            showPurchaseMenu();
+                        break;
+                        case 'No':
+                            quit();
+                        break;
+                    }
+                });
+            });
+        }else{
+            console.log('Sorry, not enough items to sell');
+        }
+    });
 }
 
 function promptPurchaseItem(){
